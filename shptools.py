@@ -1,7 +1,7 @@
 import itertools
 import shapefile
-from shapely.geometry import Polygon, MultiLineString, LineString
-
+from shapely.geometry import Polygon, MultiLineString, LineString, Point
+import pdb
 
 def read_shp(filename):
     """Read contents of a shapefile to a shapely geometry object.
@@ -158,14 +158,20 @@ def write_shp(filename, geometry, records=[], fields=[]):
             # fields
             for field in fields:
                 sw.field(field, field_type[field], decimal=precision[field])
+            
+            if not records:
+                # add dummy length field and prepare records for it
+                records = [[line.length] for line in geometry]
+                sw.field('length', 'N', decimal=5)
 
             # geometry and records
             for line, record in itertools.izip(geometry, records):
-                sw.line([list(line.coords)])
+                sw.line(parts=[list(line.coords)])
                 sw.record(*record)
-
+                
             sw.save(filename)
 
+        # LIST OF POLYGONS
         elif isinstance(geometry[0], Polygon):
             sw = shapefile.Writer(shapefile.POLYGON)
             
@@ -179,6 +185,28 @@ def write_shp(filename, geometry, records=[], fields=[]):
                 sw.record(*record)
                 
             sw.save(filename)
+        
+        # LIST OF POINTS
+        elif isinstance(geometry[0], Point):
+            sw = shapefile.Writer(shapefile.POINT)
+
+            # geometry and records
+            if records:
+                # fields
+                for field in fields:
+                    sw.field(field, field_type[field], decimal=precision[field])
+            
+                for point, record in itertools.izip(geometry, records):
+                    sw.point(point.x, point.y)
+                    sw.record(*record)
+                    
+                sw.save(filename)
+            else:
+                for point in geometry:
+                    sw.point(point.x, point.y)
+
+                sw.saveShp(filename)
+            
         
         else:
             raise NotImplementedError
