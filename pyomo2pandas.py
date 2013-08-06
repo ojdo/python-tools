@@ -10,7 +10,7 @@ import pandas as pd
 from datetime import datetime
 
 def get_entity(instance, name):
-    """ Return a DataFrame for an entity in model intance.
+    """ Return a DataFrame for an entity in model instance.
     """
     
     # retrieve
