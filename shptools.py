@@ -159,14 +159,14 @@ def write_shp(filename, geometry, records=[], fields=[]):
             for field in fields:
                 sw.field(field, field_type[field], decimal=precision[field])
             
-            if not records:
+            if not fields:
                 # add dummy length field and prepare records for it
                 records = [[line.length] for line in geometry]
                 sw.field('length', 'N', decimal=5)
 
             # geometry and records
             for line, record in itertools.izip(geometry, records):
-                sw.line(parts=[list(line.coords)])
+                sw.line([list(line.coords)])
                 sw.record(*record)
                 
             sw.save(filename)
