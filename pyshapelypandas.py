@@ -22,7 +22,7 @@ def read_shp(filename):
     elif sr.shapeType == shapefile.POLYLINE:
         geometries = [LineString(shape.points) for shape in sr.iterShapes()]
     elif sr.shapeType == shapefile.POINT:
-        geometries = [Point(shape.points) for shape in sr.iterShapes()]
+        geometries = [Point(*shape.points[0]) for shape in sr.iterShapes()]
     else:
         raise NotImplementedError
     

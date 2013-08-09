@@ -189,23 +189,24 @@ def write_shp(filename, geometry, records=[], fields=[]):
         # LIST OF POINTS
         elif isinstance(geometry[0], Point):
             sw = shapefile.Writer(shapefile.POINT)
-
-            # geometry and records
-            if records:
-                # fields
-                for field in fields:
-                    sw.field(field, field_type[field], decimal=precision[field])
             
-                for point, record in itertools.izip(geometry, records):
-                    sw.point(point.x, point.y)
-                    sw.record(*record)
-                    
-                sw.save(filename)
-            else:
-                for point in geometry:
-                    sw.point(point.x, point.y)
+            # fields
+            for field in fields:
+                sw.field(field, field_type[field], decimal=precision[field])
+            
+            if not fields:
+                # add dummy length field and prepare records for it
+                records = [[point.x, point.y] for point in geometry]
+                sw.field('x', 'N', decimal=5)
+                sw.field('y', 'N', decimal=5)
+                
+            # shapes and records
+            for point, record in itertools.izip(geometry, records):
+                sw.point(point.x, point.y)
+                sw.record(*record)
 
-                sw.saveShp(filename)
+            # save
+            sw.save(filename)
             
         
         else:
