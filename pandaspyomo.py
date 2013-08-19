@@ -2,9 +2,9 @@
 
 Pyomo is a GAMS-like model description language for mathematical
 optimization problems. This module provides functions to read data from 
-Pyomo model instances and result objects.
-
-
+Pyomo model instances and result objects. Use list_entities to get a list
+of all entities (sets, params, variables, objectives or constraints) inside a 
+pyomo instance, before get its contents by get_entity (or get_entities).
 """
 import pandas as pd
 from datetime import datetime
@@ -39,6 +39,8 @@ def get_entity(instance, name):
     
 def get_entities(instance, names):
     """ Return one DataFrame with entities in columns and a common index.
+    
+    Works best when all entities share a common
     """
     
     df = pd.DataFrame()
@@ -81,6 +83,9 @@ def list_entities(instance, entity_type):
             
     elif entity_type in ["obj", "objective", "objectives"]:
         return sorted((x, get_onset_names(y)) for (x,y) in iter_entities if '.objective.' in str(type(y)))
+        
+    else:
+        return ValueError("Unknown parameter entity_type")
 
 
 def get_onset_names(entity):
