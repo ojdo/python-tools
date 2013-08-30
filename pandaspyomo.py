@@ -7,7 +7,6 @@ of all entities (sets, params, variables, objectives or constraints) inside a
 pyomo instance, before get its contents by get_entity (or get_entities).
 """
 import pandas as pd
-from datetime import datetime
 
 def get_entity(instance, name):
     """ Return a DataFrame for an entity in model instance.
@@ -105,5 +104,3 @@ def get_onset_names(entity):
     
     return labels
 
-def now(mydateformat='%Y%m%dT%H%M%S'):
-    return datetime.now().strftime(mydateformat)

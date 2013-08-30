@@ -1,4 +1,4 @@
-""" I/O functionality for manipulating shapefiles with DataFrames """
+""" pandashp: I/O functionality for manipulating shapefiles with DataFrames """
 import itertools
 import numpy as np
 import pandas as pd
