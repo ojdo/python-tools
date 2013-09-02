@@ -4,7 +4,7 @@ import pandas as pd
 import xlrd
 
 def now(mydateformat='%Y%m%dT%H%M%S'):
-    """Return current datetime as string with custom format
+    """ Return current datetime as string with custom format.
     
     Args:
         mydateformat: optional format string (default: '%Y%m%dT%H%M%S')
@@ -16,7 +16,19 @@ def now(mydateformat='%Y%m%dT%H%M%S'):
 
 
 def read_xls(filename):
-    """Return list of pandas DataFrames from Excel spreadsheet"""
+    """ Convert Excel file to dict of pandas DataFrames.
+    
+    Parses all spreadsheets within an Excel file using pandas.ExcelFile.parse,
+    if its top left cell is not empty. The first row is expected to contain
+    column titles. Titles starting with uppercase lettres are used as index
+    columns in the resulting DataFrame.
+    
+    Args:
+        filename: Excel spreadsheet
+        
+    Returns:
+        dict of pandas DataFrames with sheet names as keys
+    """
     
     dfs = {}
     xls = pd.ExcelFile(filename)

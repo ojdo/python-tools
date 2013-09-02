@@ -74,3 +74,43 @@ def write_shp(dataframe, filename):
 
     sw.save(filename)
     
+    
+def match_nodes_and_edges(nodes, edges):
+    """Adds unique IDs to nodes and corresponding edges.
+    
+    Identifies, which nodes coincide with the endpoints of edges and creates
+    matching IDs for matching points, thus creating a node-edge graph whose
+    edges are encoded purely by node ID pairs.
+    
+    Adds/modifies columns 'Node1' and 'Node2' in DataFrame edges to reflect the
+    IDs of the nodes DataFrame which the edges touch. IDs are taken from 
+    the nodes index.
+    
+    Args:
+        nodes: pandas DataFrame with geometry column (Point)
+        edges pandas DataFrame with geometry column (LineString)
+        
+    Returns:
+        Nothing, the arguments are modified in place. The resulting nodes
+        and edges can be directly used in dhmin.create_model()
+    """
+    
+    node_indices = []
+    
+    for e, line in enumerate(edges.geometry):
+        edge_endpoints = []
+        for k, node in enumerate(nodes.geometry):
+            if line.touches(node):
+                edge_endpoints.append(nodes.index[k])
+        
+        if len(edge_endpoints) != 2:
+            print "edge " + str(e) + " has wrong number of endpoints: " + str(edge_endpoints)
+            return
+        
+        node_indices.append(edge_endpoints)
+    
+    edges['Node1'] = pd.Series([min(n1n2) for n1n2 in node_indices],
+                                index=edges.index)
+    edges['Node2'] = pd.Series([max(n1n2) for n1n2 in node_indices],
+                                index=edges.index)
+    
