@@ -39,7 +39,7 @@ def write_shp(dataframe, filename):
     
     # split geometry column from dataframe
     geometry = df.pop('geometry')
-        
+
     # write geometries to shp/shx, according to geometry type
     if isinstance(geometry[0], Point):
         sw = shapefile.Writer(shapefile.POINT)
