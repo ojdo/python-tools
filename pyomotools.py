@@ -1,7 +1,8 @@
 """ pyomotools: common helper functions for pyomo model creation """
 from datetime import datetime
 import pandas as pd
-import xlrd
+import xlrd
+
 
 def now(mydateformat='%Y%m%dT%H%M%S'):
     """ Return current datetime as string with custom format.
@@ -36,8 +37,8 @@ def read_xls(filename):
         first_row = sheet.row_slice(0)
         
         # skip sheet if completely empty or first cell is blank
-        if not first_row or first_row[0].ctype in (xlrd.XL_CELL_BLANK,
-                                                   xlrd.XL_CELL_EMPTY):
+        if not first_row \
+           or first_row[0].ctype in (xlrd.XL_CELL_BLANK, xlrd.XL_CELL_EMPTY):
             continue
             
         # otherwise determine column numbers of titles starting with an
