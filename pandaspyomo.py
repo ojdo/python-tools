@@ -34,6 +34,7 @@ def get_entity(instance, name):
             if label in labels[:k]:
                 labels[k] = labels[k] + "_"
         
+    # name columns according to labels + entity name
     results.columns = labels + [name]
     results.set_index(labels, inplace=True)
     
@@ -42,7 +43,15 @@ def get_entity(instance, name):
 def get_entities(instance, names):
     """ Return one DataFrame with entities in columns and a common index.
     
-    Works best when all entities share a common
+    Works only on entities that share a common domain (set or set_tuple), which
+    is used as index of the returned DataFrame.
+    
+    Args:
+        instance: a Pyomo ConcreteModel object
+        names: list of entity names (as returned by list_entities)
+        
+    Returns:
+        a Pandas DataFrame with entities as columns and domains as index
     """
     
     df = pd.DataFrame()
