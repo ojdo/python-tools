@@ -60,6 +60,7 @@ def write_shp(dataframe, filename):
         
     # add fields for dbf
     for k, column in enumerate(df.columns):
+        column = str(column) # unicode strings freak out pyshp, so remove u'..'
         if np.issubdtype(df.dtypes[k], np.number):
             if np.issubdtype(df.dtypes[k], np.floating):
                 sw.field(column, 'N', decimal=5)
