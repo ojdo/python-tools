@@ -5,13 +5,30 @@ optimization problems. This module provides functions to read data from
 Pyomo model instances and result objects. Use list_entities to get a list
 of all entities (sets, params, variables, objectives or constraints) inside a 
 pyomo instance, before get its contents by get_entity (or get_entities).
+
+Usage:
+    import pandaspyomo as pdpo
+    pdpo.list_entities(instance, 'var')
+        [('EprOut', ['time', 'process', 'commodity', 'commodity']), ... 
+         ('EprIn',  ['time', 'process', 'commodity', 'commodity'])]
+    epr = pdpo.get_entities(instance, ['EprOut', 'EprInt'])
+    ...
+    
 """
+__all__ = ["get_entity", "get_entities", "list_entities"]
 
 import pandas as pd
 import pdb
 
 def get_entity(instance, name):
     """ Return a DataFrame for an entity in model instance.
+    
+    Args:
+        instance: a Pyomo ConcreteModel instance
+        name: name of a Set, Param, Var, Constraint or Objective
+        
+    Returns:
+        a single-columned Pandas DataFrame with domain as index
     """
     
     # retrieve
@@ -47,7 +64,7 @@ def get_entities(instance, names):
     is used as index of the returned DataFrame.
     
     Args:
-        instance: a Pyomo ConcreteModel object
+        instance: a Pyomo ConcreteModel instance
         names: list of entity names (as returned by list_entities)
         
     Returns:
@@ -136,7 +153,8 @@ def get_entity_type(entity):
 
 def get_onset_names(entity):
     # get column titles for entities from domain set names
-    entity_type = get_entity_type(entity)
+    entity_type = get_entity_type(entity)
+
     labels = []
     
     if entity_type in ['set']:

@@ -1,4 +1,20 @@
-""" pandashp: I/O functionality for manipulating shapefiles with DataFrames """
+""" pandashp: read/write shapefiles to/from special DataFrames
+
+Offers two functions read_shp and write_shp that convert ESRI shapefiles to
+pandas DataFrames that can be manipulated at will and then written back to
+shapefiles. Opens up data manipulation capabilities beyond a simple GIS field
+calculator.
+
+Usage:
+    import pandashp as pdshp
+    # calculate population density from shapefile of cities (stupid, I know)
+    cities = pdshp.read_shp('cities_germany_projected')
+    cities['popdens'] = cities['population'] / cities['area']
+    pdshp.write_shp(cities, 'cities_germany_projected_popdens')
+
+"""
+__all__ = ["read_shp", "write_shp", "match_vertices_and_edges"]
+
 import itertools
 import numpy as np
 import pandas as pd
@@ -6,7 +22,17 @@ import shapefile
 from shapely.geometry import LineString, Point, Polygon
 
 def read_shp(filename):
-    """Read shapefile to dataframe w/ geometry."""
+    """Read shapefile to dataframe w/ geometry.
+    
+    Args:
+        filename: ESRI shapefile name to be read  (without .shp extension)
+        
+    Returns:
+        pandas DataFrame with column geometry, containing individual shapely
+        Geometry objects (i.e. Point, LineString, Polygon) depending on 
+        the shapefiles original shape type
+    
+    """
     sr = shapefile.Reader(filename)
     
     cols = sr.fields[:] # [:] = duplicate field list
@@ -33,7 +59,17 @@ def read_shp(filename):
     return df
 
 def write_shp(dataframe, filename):
-    """Write dataframe w/ geometry to shapefile."""
+    """Write dataframe w/ geometry to shapefile.
+    
+    Args:
+        dataframe: a pandas DataFrame with column geometry and homogenous 
+                   shape types (Point, LineString, or Polygon)
+        filename: ESRI shapefile name to be written (without .shp extension)
+        
+    Returns:
+        Nothing.
+
+    """
     
     df = dataframe.copy()
     
