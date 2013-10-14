@@ -72,6 +72,7 @@ def write_shp(dataframe, filename):
     """
     
     df = dataframe.copy()
+    df.reset_index(inplace=True)
     
     # split geometry column from dataframe
     geometry = df.pop('geometry')
