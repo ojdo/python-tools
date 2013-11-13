@@ -18,7 +18,6 @@ Usage:
 __all__ = ["get_entity", "get_entities", "list_entities"]
 
 import pandas as pd
-import pdb
 
 def get_entity(instance, name):
     """ Return a DataFrame for an entity in model instance.
@@ -31,18 +30,37 @@ def get_entity(instance, name):
         a single-columned Pandas DataFrame with domain as index
     """
     
-    # retrieve
+    # retrieve entity, its type and its onset names
     entity = instance.__getattribute__(name)
-    
+    entity_type = get_entity_type(entity)
     labels = get_onset_names(entity)
 
-    # create DataFrame
-    if entity._ndim > 1:
-        # concatenate index tuples with value if entity has multidimensional indices v[0]
-        results = pd.DataFrame([v[0]+(v[1].value,) for v in entity.iteritems()])
+    # extract values
+    if entity_type == 'set':
+        # Pyomo sets don't have values, only elements
+        results = pd.DataFrame([(v, 1) for v in entity.value])
+        
+        # for unconstrained sets, the column label is identical to their index
+        # hence, make index equal to entity name and append underscore to name 
+        # (=the later column title) to preserve identical index names for both
+        # unconstrained supersets 
+        if not labels:
+            labels = [name]
+            name = name+'_'
+            
+    elif entity_type == 'parameter':
+        if entity.dim() > 1:
+            results = pd.DataFrame([v[0]+(v[1],) for v in entity.iteritems()])
+        else:
+            results = pd.DataFrame(entity.iteritems())
     else:
-        # otherwise, create tuple from scalar index v[0]
-        results = pd.DataFrame([(v[0], v[1].value) for v in entity.iteritems()])
+        # create DataFrame
+        if entity._ndim > 1:
+            # concatenate index tuples with value if entity has multidimensional indices v[0]
+            results = pd.DataFrame([v[0]+(v[1]) for v in entity.iteritems()])
+        else:
+            # otherwise, create tuple from scalar index v[0]
+            results = pd.DataFrame([(v[0], v[1].value) for v in entity.iteritems()])
 
     # check for duplicate onset names and append one to several "_" to make 
     # them unique
@@ -157,7 +175,7 @@ def get_onset_names(entity):
 
     labels = []
     
-    if entity_type in ['set']:
+    if entity_type == 'set':
         if entity.dimen > 1 and entity.domain:
             # N-dimensional set tuples
             for domain_set in entity.domain.set_tuple:
@@ -168,8 +186,12 @@ def get_onset_names(entity):
         else:
             # no domain, so no labels needed
             pass
+        
+    elif entity_type == 'parameter':
+        if entity._index:
+            labels = get_onset_names(entity._index)
 
-    if entity_type in ['parameter', 'variable', 'constraint', 'objective']:
+    elif entity_type in ['variable', 'constraint', 'objective']:
         if entity._index_set:
             for domain_set in entity._index_set:
                 if domain_set.dimen == 1:
@@ -185,6 +207,8 @@ def get_onset_names(entity):
             else:
                 # 0-dimensional thing, so no labels needed
                 pass
-    
+    else:
+        raise ValueError("Function get_entity_type returne unknown entity type '"+entity_type+"'!")
+        
     return labels
 
