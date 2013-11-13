@@ -57,7 +57,7 @@ def get_entity(instance, name):
         # create DataFrame
         if entity._ndim > 1:
             # concatenate index tuples with value if entity has multidimensional indices v[0]
-            results = pd.DataFrame([v[0]+(v[1]) for v in entity.iteritems()])
+            results = pd.DataFrame([v[0]+(v[1].value,) for v in entity.iteritems()])
         else:
             # otherwise, create tuple from scalar index v[0]
             results = pd.DataFrame([(v[0], v[1].value) for v in entity.iteritems()])
@@ -188,8 +188,11 @@ def get_onset_names(entity):
             pass
         
     elif entity_type == 'parameter':
-        if entity._index:
+        if entity.dim() > 0 and entity._index:
             labels = get_onset_names(entity._index)
+        else:
+            # zero dimensions, so no onset labels
+            pass
 
     elif entity_type in ['variable', 'constraint', 'objective']:
         if entity._index_set:
