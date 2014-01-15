@@ -49,9 +49,14 @@ def read_xls(filename, sheets=[]):
     dfs = {}
     xls = pd.ExcelFile(filename)
     for sheet in xls.book.sheets():
+        # skip sheet if list of sheets was specified
+        if sheets and sheet.name not in sheets:
+            continue
+        
+        # extract the sheet's first row to check for emptiness
         first_row = sheet.row_slice(0)
         
-        # skip a spreadsheet if completely empty or first cell is blank
+        # skip a spreadsheet if completely empty or its first cell is blank
         if not first_row \
            or first_row[0].ctype in (xlrd.XL_CELL_BLANK, xlrd.XL_CELL_EMPTY):
             continue
