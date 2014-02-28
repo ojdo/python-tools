@@ -63,8 +63,8 @@ def read_xls(filename, sheets=[]):
             
         # otherwise determine column numbers of titles starting with an
         # uppercase lettre...
-        uppercase_columns = [k for k, ct in enumerate(first_row) 
-                             if ct.value[0].isupper()]
+        uppercase_columns = [k for k, column_title in enumerate(first_row) 
+                             if column_title.value[0].isupper()]
                              
         # ... and parse those to a pandas DataFrame
         dfs[sheet.name] = xls.parse(sheet.name, index_col=uppercase_columns)
