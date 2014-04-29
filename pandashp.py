@@ -58,13 +58,13 @@ def read_shp(filename):
     df = df.convert_objects(convert_numeric=True)
     return df
 
-def write_shp(dataframe, filename):
+def write_shp(filename, dataframe):
     """Write dataframe w/ geometry to shapefile.
     
     Args:
+        filename: ESRI shapefile name to be written (without .shp extension)
         dataframe: a pandas DataFrame with column geometry and homogenous 
                    shape types (Point, LineString, or Polygon)
-        filename: ESRI shapefile name to be written (without .shp extension)
         
     Returns:
         Nothing.
@@ -134,7 +134,7 @@ def match_vertices_and_edges(vertices, edges):
     """
     
     vertex_indices = []
-    
+    errors = False
     for e, line in enumerate(edges.geometry):
         edge_endpoints = []
         for k, vertex in enumerate(vertices.geometry):
@@ -143,9 +143,12 @@ def match_vertices_and_edges(vertices, edges):
         
         if len(edge_endpoints) != 2:
             print "edge " + str(e) + " has wrong number of endpoints: " + str(edge_endpoints)
-            return
+            errors = True
         
         vertex_indices.append(edge_endpoints)
+        
+    if errors:
+        return vertex_indices
     
     edges['Vertex1'] = pd.Series([min(n1n2) for n1n2 in vertex_indices],
                                 index=edges.index)
