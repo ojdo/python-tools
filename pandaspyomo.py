@@ -101,7 +101,6 @@ def get_entities(instance, names):
             df = df.join(other, how='outer')
         
             if index_names_before != df.index.names:
-                print "Warning: column names of indices don't match!"
                 df.index.names = index_names_before
         
     return df
