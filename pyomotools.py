@@ -62,11 +62,16 @@ def read_xls(filename, sheets=[]):
             continue
             
         # otherwise determine column numbers of titles starting with an
-        # uppercase lettre...
+        # uppercase lettre while skipping empty columns 
         uppercase_columns = [k for k, column_title in enumerate(first_row) 
-                             if column_title.value[0].isupper()]
+                             if column_title.value 
+                                and column_title.value[0].isupper()]
                              
-        # ... and parse those to a pandas DataFrame
-        dfs[sheet.name] = xls.parse(sheet.name, index_col=uppercase_columns)
-            
+        # parse those columns to a pandas DataFrame
+        df = xls.parse(sheet.name, index_col=uppercase_columns)
+        
+        # and prune any columns with only NaN values
+        # these are mainly empty columns
+        dfs[sheet.name] = df.dropna(axis=1, how='all')
+
     return dfs
