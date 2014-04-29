@@ -5,8 +5,8 @@ def endpoints_from_lines(lines):
     
     all_points = []
     for line in lines:
-        all_points.append(line.coords[0])
-        all_points.append(line.coords[-1])
+        for i in [0, -1]: # start and end point
+            all_points.append(line.coords[i])
     
     unique_points = set(all_points)
     
@@ -79,15 +79,15 @@ def bend_towards(line, where, to):
         raise ValueError('line does not contain point.')
         
     coords = line.coords[:]
-    # easy case: where is a vertex of line
+    # easy case: where is (almost) a vertex of line
     for k, vertex in enumerate(coords):
         if where.almost_equals(Point(vertex)):
             # move coordinates of line vertex to destination
             coords[k] = to.coords[0]
             return LineString(coords)
     
-    # hard case: where lies between to vertices
-    # find nearest vertex and move that one
+    # hard case: where lies between vertices of line, so
+    # find nearest vertex and move that one to point to
     _, min_k = min((where.distance(Point(vertex)), k) 
                            for k, vertex in enumerate(coords))
     coords[min_k] = to.coords[0]
@@ -130,7 +130,10 @@ def snappy_endings(lines, max_distance):
             if endpoint.equals(snapping_point):
                 snapping_points[i] = target
                 break
-        
+
+    # post-processing: remove newly created lines of length 0
+    snapped_lines = [s for s in snapped_lines if s.length > 0]
+
     return snapped_lines
     
     
