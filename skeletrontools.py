@@ -36,7 +36,7 @@ def skeletonize(roads, buffer_length=60,
         dissolve_length     optional (def: 30) considerably smaller than buffer_length
         simplify_length     optional 
         buffer_resolution   optional
-        psg_length          optional
+        psg_length          optional (default: 150) Skeletron algorithm length
     """
 
     # buffer and merge streets
