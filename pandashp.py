@@ -19,6 +19,8 @@ import itertools
 import numpy as np
 import pandas as pd
 import shapefile
+import shapelytools
+import warnings
 from shapely.geometry import LineString, Point, Polygon
 
 def read_shp(filename):
@@ -134,24 +136,56 @@ def match_vertices_and_edges(vertices, edges):
     """
     
     vertex_indices = []
-    errors = False
     for e, line in enumerate(edges.geometry):
         edge_endpoints = []
         for k, vertex in enumerate(vertices.geometry):
-            if line.touches(vertex):
+            if line.touches(vertex) or line.intersects(vertex):
                 edge_endpoints.append(vertices.index[k])
         
-        if len(edge_endpoints) != 2:
-            print "edge " + str(e) + " has wrong number of endpoints: " + str(edge_endpoints)
-            errors = True
+        if len(edge_endpoints) == 0:
+            warnings.warn("edge " + str(e) + " has no endpoints: " + str(edge_endpoints))
+        elif len(edge_endpoints) == 1:
+            warnings.warn("edge " + str(e) + " has only 1 endpoint: " + str(edge_endpoints))
         
         vertex_indices.append(edge_endpoints)
-        
-    if errors:
-        return vertex_indices
     
     edges['Vertex1'] = pd.Series([min(n1n2) for n1n2 in vertex_indices],
                                 index=edges.index)
     edges['Vertex2'] = pd.Series([max(n1n2) for n1n2 in vertex_indices],
                                 index=edges.index)
+
+def find_closest_edge(polygons, edges, to_attr='index', column='nearest'):
+    """Find closest edge for centroid of polygons.
     
+    Args:
+        polygons: a pandashp DataFrame of Polygons
+        edges: a pandashp DataFrame of LineStrings
+        to_attr: a column name in DataFrame edges (default: index)
+        column: a column name to be added/overwrite in DataFrame polygons with
+                the value of colun to_attr in the nearest row of DataFrame edges
+    
+    Returns:
+        a list of LineStrings connecting polygons' centroids with the nearest 
+        point in in edges. Side effect: polygons recieves new column with the 
+        attribute value of nearest edge. Warning: if column exists, it is 
+        overwritten.
+    
+    """
+   
+    connecting_lines = []
+    nearest_indices = []
+    centroids = [b.centroid for b in polygons['geometry']]
+    
+    for centroid in centroids:
+        nearest_edge, _, nearest_index = shapelytools.closest_object(
+                                         edges['geometry'], centroid)
+        nearest_point = shapelytools.project_point_to_object(centroid, nearest_edge)
+        
+        connecting_lines.append(LineString(tuple(centroid.coords) + 
+                                           tuple(nearest_point.coords)))
+        
+        nearest_indices.append(edges[to_attr][nearest_index])
+    
+    polygons[column] = pd.Series(nearest_indices, index=polygons.index)
+    
+    return connecting_lines

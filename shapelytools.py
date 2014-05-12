@@ -178,3 +178,121 @@ def find_isolated_endpoints(lines):
                 isolated_endpoints.append(endpoint)
     return isolated_endpoints
     
+def closest_object(geometries, point):
+    """Find the nearest geometry among a list, measured from fixed point.
+    
+    Args:
+        geometries: a list of shapely geometry objects
+        point: a shapely Point
+       
+    Returns:
+        Tuple (geom, min_dist, min_index) of the geometry with minimum distance 
+        to point, its distance min_dist and the list index of geom, so that
+        geom = geometries[min_index].
+    """    
+    min_dist, min_index = min((point.distance(geom), k) 
+                              for (k, geom) in enumerate(geometries))
+    
+    return geometries[min_index], min_dist, min_index
+    
+    
+def project_point_to_line(point, line_start, line_end):
+    """Find nearest point on a straight line, measured from given point.
+    
+    Args:
+        point: a shapely Point object
+        line_start: the line starting point as a shapely Point
+        line_end: the line end point as a shapely Point
+    
+    Returns:
+        a shapely Point that lies on the straight line closest to point
+    
+    Source: http://gis.stackexchange.com/a/438/19627
+    """
+    line_magnitude = line_start.distance(line_end)
+    
+    u = ((point.x - line_start.x) * (line_end.x - line_start.x) +
+         (point.y - line_start.y) * (line_end.y - line_start.y)) \
+         / (line_magnitude ** 2)
+
+    # closest point does not fall within the line segment, 
+    # take the shorter distance to an endpoint
+    if u < 0.00001 or u > 1:
+        ix = point.distance(line_start)
+        iy = point.distance(line_end)
+        if ix > iy:
+            return line_end
+        else:
+            return line_start
+    else:
+        ix = line_start.x + u * (line_end.x - line_start.x)
+        iy = line_start.y + u * (line_end.y - line_start.y)
+        return Point([ix, iy])
+        
+def pairs(lst):
+    """Iterate over a list in overlapping pairs.
+    
+    Args:
+        lst: an iterable/list
+        
+    Returns:
+        Yields a pair of consecutive elements (lst[k], lst[k+1]) of lst. Last 
+        call yields (lst[-2], lst[-1]).
+        
+    Example:
+        lst = [4, 7, 11, 2]
+        pairs(lst) yields (4, 7), (7, 11), (11, 2)
+       
+    Source:
+        http://stackoverflow.com/questions/1257413/1257446#1257446
+    """
+    i = iter(lst)
+    prev = i.next()
+    for item in i:
+        yield prev, item
+        prev = item
+
+
+def project_point_to_object(point, geometry):
+    """Find nearest point in geometry, measured from given point.
+    
+    Args:
+        point: a shapely Point
+        geometry: a shapely geometry object (LineString, Polygon)
+        
+    Returns:
+        a shapely Point that lies on geometry closest to point
+        
+    Source:
+    """
+    from sys import maxint
+    nearest_point = None
+    min_dist = maxint
+    
+    if isinstance(geometry, Polygon):
+        for seg_start, seg_end in pairs(list(geometry.exterior.coords)):
+            line_start = Point(seg_start)
+            line_end = Point(seg_end)
+        
+            intersection_point = project_point_to_line(point, line_start, line_end)
+            cur_dist =  point.distance(intersection_point)
+        
+            if cur_dist < min_dist:
+                min_dist = cur_dist
+                nearest_point = intersection_point
+    
+    elif isinstance(geometry, LineString):
+        for seg_start, seg_end in pairs(list(geometry.coords)):
+            line_start = Point(seg_start)
+            line_end = Point(seg_end)
+        
+            intersection_point = project_point_to_line(point, line_start, line_end)
+            cur_dist =  point.distance(intersection_point)
+        
+            if cur_dist < min_dist:
+                min_dist = cur_dist
+                nearest_point = intersection_point
+    else:
+        raise NotImplementedError("project_point_to_object not implemented for"+
+                                  " geometry type '" + geometry.type + "'.")
+    return nearest_point
