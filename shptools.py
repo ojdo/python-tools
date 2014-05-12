@@ -216,29 +216,3 @@ def write_shp(filename, geometry, records=[], fields=[]):
         raise NotImplementedError
 
 
-
-
-
-def main():
-    from math import sqrt
-
-    filename = 'shp/Singapore_all_streets_buffer35'
-    (geometries, records, fields) = read_shp(filename)
-
-    fm = {uel: k for (k, uel) in enumerate(fields)} # create field map
-
-    for record in records:
-        air_dist = sqrt((record[fm['start-x']] - record[fm['end-x']])**2 +
-                        (record[fm['start-y']] - record[fm['end-y']])**2)
-
-        heat_annual = 50 * 1800
-        heat_peak = 50
-
-        record.extend([air_dist, heat_annual, heat_peak])
-
-    fields.extend(['air_dist', 'heat_annual', 'heat_peak'])
-
-    write_shp('shp/Singapore_heat_demand', geometries, records, fields)
-
-if __name__ == '__main__':
-    main()
