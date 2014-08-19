@@ -189,3 +189,18 @@ def find_closest_edge(polygons, edges, to_attr='index', column='nearest'):
     polygons[column] = pd.Series(nearest_indices, index=polygons.index)
     
     return pd.DataFrame({'geometry': connecting_lines})
+
+def bounds(df):
+    """Return a DataFrame of minx, miny, maxx, maxy of each geometry."""
+    bounds = np.array([geom.bounds for geom in df.geometry])
+    return pd.DataFrame(bounds,
+                     columns=['minx', 'miny', 'maxx', 'maxy'],
+                     index=df.index)
+    
+def total_bounds(df):
+    """Return bounding box (minx, miny, maxx, maxy) of all geometries. """
+    b = bounds(df)
+    return (b['minx'].min(),
+            b['miny'].min(),
+            b['maxx'].max(),
+            b['maxy'].max())
