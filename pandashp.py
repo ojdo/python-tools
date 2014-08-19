@@ -60,13 +60,14 @@ def read_shp(filename):
     df = df.convert_objects(convert_numeric=True)
     return df
 
-def write_shp(filename, dataframe):
+def write_shp(filename, dataframe, write_index=True):
     """Write dataframe w/ geometry to shapefile.
     
     Args:
         filename: ESRI shapefile name to be written (without .shp extension)
         dataframe: a pandas DataFrame with column geometry and homogenous 
                    shape types (Point, LineString, or Polygon)
+        write_index: add index as column to attribute tabel (default: true)
         
     Returns:
         Nothing.
@@ -74,7 +75,8 @@ def write_shp(filename, dataframe):
     """
     
     df = dataframe.copy()
-    df.reset_index(inplace=True)
+    if write_index:
+        df.reset_index(inplace=True)
     
     # split geometry column from dataframe
     geometry = df.pop('geometry')
@@ -115,24 +117,23 @@ def write_shp(filename, dataframe):
     sw.save(filename)
     
     
-def match_vertices_and_edges(vertices, edges):
+def match_vertices_and_edges(vertices, edges, vertex_cols=('Vertex1', 'Vertex2')):
     """Adds unique IDs to vertices and corresponding edges.
     
     Identifies, which nodes coincide with the endpoints of edges and creates
     matching IDs for matching points, thus creating a node-edge graph whose
-    edges are encoded purely by node ID pairs.
-    
-    Adds/modifies columns 'Vertex1' and 'Vertex2' in DataFrame edges to reflect 
-    the IDs of the nodes DataFrame which the edges touch. IDs are taken from 
-    the nodes index.
+    edges are encoded purely by node ID pairs. The optional argument 
+    vertex_cols specifies which DataFrame columns of edges are added, default
+    is 'Vertex1' and 'Vertex2'.
     
     Args:
         vertices: pandas DataFrame with geometry column of type Point
-        edges pandas DataFrame with geometry column of type LineString
+        edges: pandas DataFrame with geometry column of type LineString
+        vertex_cols: tuple of 2 strings for the IDs numbers
         
     Returns:
-        Nothing, the arguments are modified in place. The modified vertices
-        and edges can be directly used in dhmin, capmin.
+        Nothing, the mathing IDs are added to the columns vertex_cols in 
+        argument edges
     """
     
     vertex_indices = []
@@ -149,17 +150,17 @@ def match_vertices_and_edges(vertices, edges):
         
         vertex_indices.append(edge_endpoints)
     
-    edges['Vertex1'] = pd.Series([min(n1n2) for n1n2 in vertex_indices],
-                                index=edges.index)
-    edges['Vertex2'] = pd.Series([max(n1n2) for n1n2 in vertex_indices],
-                                index=edges.index)
+    edges[vertex_cols[0]] = pd.Series([min(n1n2) for n1n2 in vertex_indices],
+                                      index=edges.index)
+    edges[vertex_cols[1]] = pd.Series([max(n1n2) for n1n2 in vertex_indices],
+                                      index=edges.index)
 
 def find_closest_edge(polygons, edges, to_attr='index', column='nearest'):
     """Find closest edge for centroid of polygons.
     
     Args:
-        polygons: a pandashp DataFrame of Polygons
-        edges: a pandashp DataFrame of LineStrings
+        polygons: a pandas DataFrame with geometry column of Polygons
+        edges: a pandas DataFrame with geometry column of LineStrings
         to_attr: a column name in DataFrame edges (default: index)
         column: a column name to be added/overwrite in DataFrame polygons with
                 the value of colun to_attr in the nearest row of DataFrame edges
@@ -169,7 +170,6 @@ def find_closest_edge(polygons, edges, to_attr='index', column='nearest'):
         point in in edges. Side effect: polygons recieves new column with the 
         attribute value of nearest edge. Warning: if column exists, it is 
         overwritten.
-    
     """
    
     connecting_lines = []
@@ -188,4 +188,4 @@ def find_closest_edge(polygons, edges, to_attr='index', column='nearest'):
     
     polygons[column] = pd.Series(nearest_indices, index=polygons.index)
     
-    return connecting_lines
+    return pd.DataFrame({'geometry': connecting_lines})
