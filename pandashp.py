@@ -46,7 +46,9 @@ def read_shp(filename):
     records = [row for row in sr.iterRecords()]
     
     if sr.shapeType == shapefile.POLYGON:
-        geometries = [Polygon(shape.points) for shape in sr.iterShapes()]
+        geometries = [Polygon(shape.points)
+                      if len(shape.points) > 2 else np.NaN  # invalid geometry
+                      for shape in sr.iterShapes()]
     elif sr.shapeType == shapefile.POLYLINE:
         geometries = [LineString(shape.points) for shape in sr.iterShapes()]
     elif sr.shapeType == shapefile.POINT:
@@ -58,6 +60,12 @@ def read_shp(filename):
     
     df = pd.DataFrame(data, columns=cols)
     df = df.convert_objects(convert_numeric=True)
+    
+    if np.NaN in geometries:
+        # drop invalid geometries
+        df = df.dropna(subset=['geometry'])
+        num_skipped = len(geometries) - len(df)
+        warnings.warn('Skipped {} invalid geometrie(s).'.format(num_skipped))
     return df
 
 def write_shp(filename, dataframe, write_index=True):
@@ -98,15 +106,21 @@ def write_shp(filename, dataframe, write_index=True):
             sw.poly([list(polygon.exterior.coords)])
     else:
         raise NotImplementedError
-        
+
     # add fields for dbf
     for k, column in enumerate(df.columns):
         column = str(column) # unicode strings freak out pyshp, so remove u'..'
-        if np.issubdtype(df.dtypes[k], np.number):
+        
+        if np.issubdtype(df.dtypes[k], np.number):        
+            # detect and convert integer-only columns
+            if (df[column] % 1 == 0).all():
+                df[column] = df[column].astype(np.integer)
+            
+            # now create the appropriate fieldtype 
             if np.issubdtype(df.dtypes[k], np.floating):
                 sw.field(column, 'N', decimal=5)
             else:
-                sw.field(column, 'N', decimal=0)
+                sw.field(column, 'I', decimal=0)
         else:
             sw.field(column)
         
