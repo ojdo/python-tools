@@ -90,17 +90,17 @@ def write_shp(filename, dataframe, write_index=True):
     geometry = df.pop('geometry')
 
     # write geometries to shp/shx, according to geometry type
-    if isinstance(geometry[0], Point):
+    if isinstance(geometry.iloc[0], Point):
         sw = shapefile.Writer(shapefile.POINT)
         for point in geometry:
             sw.point(point.x, point.y)
         
-    elif isinstance(geometry[0], LineString):
+    elif isinstance(geometry.iloc[0], LineString):
         sw = shapefile.Writer(shapefile.POLYLINE)
         for line in geometry:
             sw.line([list(line.coords)])
         
-    elif isinstance(geometry[0], Polygon):
+    elif isinstance(geometry.iloc[0], Polygon):
         sw = shapefile.Writer(shapefile.POLYGON)
         for polygon in geometry:
             sw.poly([list(polygon.exterior.coords)])
