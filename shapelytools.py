@@ -1,4 +1,6 @@
-from shapely.geometry import LineString, MultiPoint, Point, Polygon
+from shapely.geometry import (box, LineString, MultiLineString, MultiPoint, 
+    Point, Polygon)
+import shapely.ops
 
 def endpoints_from_lines(lines):
     """Return list of terminal points from list of LineStrings."""
@@ -58,13 +60,13 @@ def neighbors(lines, of):
         of: the LineString which must be touched
         
     Returns:
-        list of indices, so that all lines[indices] touch LineString of
+        list of indices, so that all lines[indices] touch the LineString of
     """
     return [k for k, line in enumerate(lines) if line.touches(of)]
     
 
 def bend_towards(line, where, to):
-    """Move the point where along a line to the point at locaton to.
+    """Move the point where along a line to the point at location to.
     
     Args:
         line: a LineString
@@ -76,13 +78,13 @@ def bend_towards(line, where, to):
     """
     
     if not line.contains(where) and not line.touches(where):
-        raise ValueError('line does not contain point.')
+        raise ValueError('line does not contain the point where.')
         
     coords = line.coords[:]
-    # easy case: where is (almost) a vertex of line
+    # easy case: where is (within numeric precision) a vertex of line
     for k, vertex in enumerate(coords):
         if where.almost_equals(Point(vertex)):
-            # move coordinates of line vertex to destination
+            # move coordinates of the vertex to destination
             coords[k] = to.coords[0]
             return LineString(coords)
     
@@ -95,7 +97,7 @@ def bend_towards(line, where, to):
 
 
 def snappy_endings(lines, max_distance):
-    """Snap endpoints of lines together if they are at most max_length away.
+    """Snap endpoints of lines together if they are at most max_length apart.
     
     Args:
         lines: a list of LineStrings or a MultiLineString
@@ -110,10 +112,11 @@ def snappy_endings(lines, max_distance):
     # isolated endpoints are going to snap to the closest vertex
     isolated_endpoints = find_isolated_endpoints(snapped_lines)    
     
-    # 
+    # only move isolated endpoints, one by one
     for endpoint in isolated_endpoints:
-        # find all vertices within a radius of max_distance
-        target = nearest_neighbor_within(snapping_points, endpoint, max_distance)
+        # find all vertices within a radius of max_distance as possible
+        target = nearest_neighbor_within(snapping_points, endpoint, 
+                                         max_distance)
         
         # do nothing if no target point to snap to is found
         if not target:
@@ -122,7 +125,8 @@ def snappy_endings(lines, max_distance):
         # find the LineString to modify within snapped_lines and update it        
         for i, snapped_line in enumerate(snapped_lines):
             if endpoint.touches(snapped_line):
-                snapped_lines[i] = bend_towards(snapped_line, where=endpoint, to=target)
+                snapped_lines[i] = bend_towards(snapped_line, where=endpoint, 
+                                                to=target)
                 break
         
         # also update the corresponding snapping_points
@@ -131,7 +135,7 @@ def snappy_endings(lines, max_distance):
                 snapping_points[i] = target
                 break
 
-    # post-processing: remove newly created lines of length 0
+    # post-processing: remove any resulting lines of length 0
     snapped_lines = [s for s in snapped_lines if s.length > 0]
 
     return snapped_lines
@@ -164,7 +168,14 @@ def nearest_neighbor_within(others, point, max_distance):
 
 
 def find_isolated_endpoints(lines):
-    """Find endpoints of lines that don't touch another line."""
+    """Find endpoints of lines that don't touch another line.
+    
+    Args:
+        lines: a list of LineStrings or a MultiLineString
+        
+    Returns:
+        A list of line end Points that don't touch any other line of lines
+    """
         
     isolated_endpoints = []
     for i, line in enumerate(lines):
@@ -262,8 +273,6 @@ def project_point_to_object(point, geometry):
         
     Returns:
         a shapely Point that lies on geometry closest to point
-        
-    Source:
     """
     from sys import maxint
     nearest_point = None
@@ -296,3 +305,54 @@ def project_point_to_object(point, geometry):
         raise NotImplementedError("project_point_to_object not implemented for"+
                                   " geometry type '" + geometry.type + "'.")
     return nearest_point
+    
+
+def one_linestring_per_intersection(lines):
+    """ Move line endpoints to intersections of line segments.
+    
+    Given a list of touching or possibly intersecting LineStrings, return a
+    list LineStrings that have their endpoints at all crossings and
+    intersecting points and ONLY there.
+    
+    Args:
+        a list of LineStrings or a MultiLineString
+        
+    Returns:
+        a list of LineStrings
+    """
+    lines_merged = shapely.ops.linemerge(lines)
+
+    # intersecting multiline with its bounding box somehow triggers a first
+    bounding_box = box(*lines_merged.bounds)
+
+    # perform linemerge (one linestring between each crossing only)
+    # if this fails, write function to perform this on a bbox-grid and then
+    # merge the result
+    lines_merged = lines_merged.intersection(bounding_box)
+    lines_merged = shapely.ops.linemerge(lines_merged)
+    return lines_merged
+
+
+def linemerge(linestrings_or_multilinestrings):
+    """ Merge list of LineStrings and/or MultiLineStrings.
+    
+    Given a list of LineStrings and possibly MultiLineStrings, merge all of
+    them to a single MultiLineString.
+    
+    Args:
+        list of LineStrings and/or MultiLineStrings
+    
+    Returns:
+        a merged LineString or MultiLineString
+    """
+    lines = []
+    for line in linestrings_or_multilinestrings:
+        if isinstance(line, MultiLineString):
+            # line is a multilinestring, so append its components
+            lines.extend(line)
+        else:
+            # line is a line, so simply append it
+            lines.append(line)
+        
+    return shapely.ops.linemerge(lines)
+    
