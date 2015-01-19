@@ -177,7 +177,7 @@ def find_closest_edge(polygons, edges, to_attr='index', column='nearest'):
         edges: a pandas DataFrame with geometry column of LineStrings
         to_attr: a column name in DataFrame edges (default: index)
         column: a column name to be added/overwrite in DataFrame polygons with
-                the value of colun to_attr in the nearest row of DataFrame edges
+                the value of column to_attr from the nearest edge in edges
     
     Returns:
         a list of LineStrings connecting polygons' centroids with the nearest 
