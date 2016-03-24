@@ -274,9 +274,8 @@ def project_point_to_object(point, geometry):
     Returns:
         a shapely Point that lies on geometry closest to point
     """
-    from sys import maxint
     nearest_point = None
-    min_dist = maxint
+    min_dist = float("inf")
     
     if isinstance(geometry, Polygon):
         for seg_start, seg_end in pairs(list(geometry.exterior.coords)):
