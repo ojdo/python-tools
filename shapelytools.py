@@ -258,7 +258,7 @@ def pairs(lst):
         http://stackoverflow.com/questions/1257413/1257446#1257446
     """
     i = iter(lst)
-    prev = i.next()
+    prev = next(i)
     for item in i:
         yield prev, item
         prev = item

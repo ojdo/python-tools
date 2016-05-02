@@ -14,7 +14,10 @@ Usage:
 
 """
 
-import itertools
+try:
+    from itertools import izip as zip
+except ImportError: # zip is a builtin in Python 3.x
+    pass
 import numpy as np
 import pandas as pd
 import shapefile
@@ -55,10 +58,10 @@ def read_shp(filename):
     else:
         raise NotImplementedError
     
-    data = [r+[g] for r,g in itertools.izip(records, geometries)]
+    data = [r+[g] for r,g in zip(records, geometries)]
     
     df = pd.DataFrame(data, columns=cols)
-    df = df.convert_objects(convert_numeric=True)
+    df = df.to_numeric()
     
     if np.NaN in geometries:
         # drop invalid geometries
