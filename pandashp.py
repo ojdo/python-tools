@@ -61,7 +61,7 @@ def read_shp(filename):
     data = [r+[g] for r,g in zip(records, geometries)]
     
     df = pd.DataFrame(data, columns=cols)
-    df = df.to_numeric()
+    df = df.convert_objects(convert_numeric=True)
     
     if np.NaN in geometries:
         # drop invalid geometries
