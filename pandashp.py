@@ -13,7 +13,6 @@ Usage:
     pdshp.write_shp(cities, 'cities_germany_projected_popdens')
 
 """
-__all__ = ["read_shp", "write_shp", "match_vertices_and_edges"]
 
 import itertools
 import numpy as np
