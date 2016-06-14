@@ -2,6 +2,26 @@
 
 This is a collection of small modules that I often/sometimes/not anymore use for my day-to-day scripting needs. I keep them in a separate directory that I [keep always on the Python search path](http://stackoverflow.com/q/17806673/2375855) so that I can include them like installed site-packages.
 
+## Installation(ish)
+
+I just clone this repo into the directory that is returned by the following Python snippet:
+
+    import os, site
+    from sys import version_info as ver
+    print(os.path.join(site.USER_BASE, 
+                       'Python{}{}'.format(ver.major, ver.minor), 
+                       'site-packages'))
+
+Depending on your operating system and Python version, this evaluates to
+
+    Windows, Python 3.5: C:\Users\ojdo\AppData\Roaming\Python\Python35\site-packages
+    Linux, Python 2.7:   /home/ojdo/.local/Python27/site-packages
+
+Anyway, open a terminal in that directory (create it if necessary) and clone this repo into that directory:
+
+    git clone https://github.com/ojdo/python-tools.git .
+
+You should now be able to import any of the following packages. Depending on what you need, you might alternatively just grab one of these files/functions.
 
 ## pandashp
 
