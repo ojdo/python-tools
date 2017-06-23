@@ -6,11 +6,13 @@ This is a collection of small modules that I often/sometimes/not anymore use for
 
 I just clone this repo into the directory that is returned by the following Python snippet:
 
-    import os, site
-    from sys import version_info as ver
-    print(os.path.join(site.USER_BASE, 
-                       'Python{}{}'.format(ver.major, ver.minor), 
-                       'site-packages'))
+```python
+import os, site
+from sys import version_info as ver
+print(os.path.join(site.USER_BASE, 
+                   'Python{}{}'.format(ver.major, ver.minor), 
+                   'site-packages'))
+```
 
 Depending on your operating system and Python version, this evaluates to
 
