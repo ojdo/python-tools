@@ -27,7 +27,9 @@ You should now be able to import any of the following packages. Depending on wha
 
 ## pandashp
 
-Basically my private implementation of a [GeoPandas](http://geopandas.org/) `GeoFrame`. This module provides two functions, `read_shp` and `write_shp`. The first one reads an ESRI shapefile to a pandas DataFrame, saving the geometry information (Points, Lines, Polygons) in the column `geometry`. The second function does the reverse. These functions do not care about transformations, much different to GeoPandas. I plan to migrate to using Geopandas myself, so better don't use this.
+Basically my private implementation of a [GeoPandas](http://geopandas.org/) `GeoFrame`. This module provides two functions, `read_shp` and `write_shp`. The first one reads an ESRI shapefile to a pandas DataFrame, saving the geometry information (Points, Lines, Polygons) in the column `geometry`. The second function does the reverse. These functions do not care about transformations, much different to GeoPandas. I plan to migrate to using Geopandas myself, so better don't use these two functions.
+
+**However**, there is utility function `find_closest_edge`, which looks deceptively simple but took some time to get this "clean". It performs an operation similar to ArcGIS's [Near](http://desktop.arcgis.com/en/arcmap/latest/tools/analysis-toolbox/near.htm) for the special case of matching point features to their nearest line passing by. It heavily relies on several functions implemented in my other toolbox `shapelytools`.
 
 ### Dependencies
   - [pandas](http://pandas.pydata.org/)
@@ -54,15 +56,17 @@ Archive for some misc functions needed for migrating [URBS](https://github.com/t
   
 ## shapelytools
 
-Many handy small functions dealing with collections of shapely objects, i.e. points, lines and polygons. I use them to script small geographic algorithms on my own. The module implements a naive nearest neighbor algorithm, pruning of short line segments, finding isolated endpoints among a list of possibly touching lines. **Note:** shapely is not aware of geographic coordinates! So while some of these functions might work with lat/lon coordinates in degrees, I use them mainly in projected coordinate systems with x/y coordinates in metres.
+Many handy small functions dealing with collections of shapely objects, i.e. points, lines and polygons. I use them to script small geographic algorithms on my own. The module implements a naive nearest neighbor algorithm, pruning of short line segments, finding isolated endpoints among a list of possibly touching lines. 
+
+:!: **Note:** shapely is not aware of geographic coordinates! So while some of these functions might work with lat/lon coordinates in degrees, I use them mainly in projected coordinate systems with x/y coordinates in metres. So use something like GeoPandas' `to_crs` function to convert your geographic (lat, lon) data to a projected (x, y) coordinate system before using anything from this package.
 
 ### Dependencies
   - [shapely](https://pypi.python.org/pypi/Shapely)
 
 
-## shptools
+## shptools (deprecated)
 
-Convenience wrapper of pyshp, including automatic type detection (numeric, string) when reading/writing shapefiles. Might be not needed anymore, but was quite handy when written. I mainly use `pandashp` above nowadays because of the much more mighty DataFrame.
+Convenience wrapper of pyshp, including automatic type detection (numeric, string) when reading/writing shapefiles. Might be not needed anymore, but was quite handy when written. This is the predecessor to my `pandashp` toolbox, which itself now is partially unneeded because of GeoPandas.
 
 ### Dependencies
   - [pyshp](https://github.com/GeospatialPython/pyshp)
@@ -75,4 +79,4 @@ Wrapper module that provides function `skeletonize`, which reads in a pandashp D
 
 ### Dependencies
   - `pandashp` above
-  - [Skeletron](https://pypi.python.org/pypi/Skeletron/0.9.2) and its dependencies
+  - [Skeletron](https://pypi.python.org/pypi/Skeletron/0.9.2) and its dependencies, i.e. [qhull](http://qhull.org/)
